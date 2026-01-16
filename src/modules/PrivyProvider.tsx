@@ -16,10 +16,14 @@ export function AppPrivyProvider() {
       config={{
         defaultChain: neuraTestnet,
         supportedChains: [neuraTestnet],
+        // Ensure embedded wallets are enabled
+        embeddedWallets: {
+          createOnLogin: 'users-without-wallets',
+        },
       }}
     >
       <QueryClientProvider client={queryClient}>
-        <WagmiProvider config={wagmiConfig} reconnectOnMount={false}>
+        <WagmiProvider config={wagmiConfig} reconnectOnMount={true}>
           <PrivySample />
         </WagmiProvider>
       </QueryClientProvider>

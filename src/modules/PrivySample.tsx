@@ -4,19 +4,19 @@ import {
   useLogout,
   usePrivy,
   useWallets,
-  useCrossAppAccounts,
-  CrossAppAccount, useSignTransaction,
 } from '@privy-io/react-auth';
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useSignMessage } from 'wagmi';
 
 export function PrivySample() {
   const { authenticated, ready, user } = usePrivy();
   const { wallets, ready: walletsReady } = useWallets();
   const { address } = useAccount();
-  console.log('Privy user', user, wallets);
+  console.log('Privy user', user);
+  console.log('Wallets', wallets);
+  console.log('Wagmi address', address);
 
-  const { signTransaction } = useSignTransaction();
+  const { signMessage } = useSignMessage();
   const { logout } = useLogout();
 
   const { login } = useLogin();
@@ -25,8 +25,9 @@ export function PrivySample() {
   const [signResult, setSignResult] = useState<string | null>(null);
   const [signError, setSignError] = useState<string | null>(null);
 
-  const walletAccount = address || null;
+  const walletAccount = address || user?.wallet?.address || null;
   const isConnected = ready && authenticated && walletsReady;
+  const hasValidWallet = user?.wallet && wallets.length > 0;
 
   // Reset state when connection status changes
   useEffect(() => {
@@ -37,42 +38,51 @@ export function PrivySample() {
 
 
   // Handle transaction signing with chainId
-  const handleSignTransaction = () => {
+  const handleSignTransaction = async () => {
     if (!walletAccount) {
       setSignError('No account or wallet address available');
       return;
     }
 
-    // Base transaction properties
-    const baseTransactionProps = {
-      to: walletAccount, // Self-transfer to same address
-      value: '0', // 0 ETH
-      gas: '21000', // Standard gas limit for simple transfers
-      gasPrice: '20000000000', // 20 gwei
-      nonce: '0',
-      data: '0x', // Empty data
-    };
+    if (!user?.wallet) {
+      setSignError('No active Privy wallet found. Please ensure wallet is properly initialized.');
+      return;
+    }
+
+    if (wallets.length === 0) {
+      setSignError('No wallets available. Please connect a wallet.');
+      return;
+    }
 
     setIsSigning(true);
     setSignError(null);
     setSignResult(null);
 
-    const testTransaction = {
-      ...baseTransactionProps,
-      chainId: DEFAULT_CHAIN_ID,
-    };
-
-    void signTransaction(testTransaction)
-      .then((signature => {
-        console.log('Signing transaction with chainId:', testTransaction);
-        setSignResult(`Transaction signed successfully! Signature: ${signature}`);
-      }))
-      .catch((error) => {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        setSignError(`Failed to sign transaction: ${errorMessage}`);
-        console.error('Transaction signing error:', error);
-      })
-      .finally(() => setIsSigning(false));
+    try {
+      // Create a message that represents the transaction data
+      const transactionData = {
+        to: walletAccount,
+        value: '0',
+        gas: '21000',
+        gasPrice: '20000000000',
+        nonce: '0',
+        data: '0x',
+        chainId: DEFAULT_CHAIN_ID,
+      };
+      
+      const message = JSON.stringify(transactionData);
+      console.log('Starting transaction signing with message:', message);
+      
+      const signature = await signMessage({ message });
+      console.log('Transaction signed successfully');
+      setSignResult(`Transaction signed successfully! Signature: ${signature}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setSignError(`Failed to sign transaction: ${errorMessage}`);
+      console.error('Transaction signing error:', error);
+    } finally {
+      setIsSigning(false);
+    }
   };
 
   if (isConnected) {
@@ -86,12 +96,22 @@ export function PrivySample() {
       <br/>
 
       <p>
-        <b>useWallets wallets:</b> {wallets.length > 0 ? wallets.map((wallet) => <div>{wallet.address}</div>) : 'No wallets found'}
+        <b>useWallets wallets:</b> {wallets.length > 0 ? wallets.map((wallet) => <div key={wallet.address}>{wallet.address}</div>) : 'No wallets found'}
       </p>
       <br/>
 
       <p>
         <b>usePrivy user.wallet.address:</b> {user?.wallet?.address || 'No privy user wallet found'}
+      </p>
+      <br/>
+
+      <p style={{
+        padding: '10px',
+        backgroundColor: hasValidWallet ? '#d4edda' : '#f8d7da',
+        borderRadius: '5px',
+        color: hasValidWallet ? '#155724' : '#721c24'
+      }}>
+        <b>Wallet Status:</b> {hasValidWallet ? '✅ Ready to sign' : '❌ Wallet not ready'}
       </p>
       <br/>
 
@@ -113,14 +133,14 @@ export function PrivySample() {
       {/* Transaction signing button */}
       <button
         onClick={handleSignTransaction}
-        disabled={isSigning}
+        disabled={isSigning || !hasValidWallet}
         style={{
           padding: '10px 20px',
           border: 'none',
           borderRadius: '5px',
-          cursor: isSigning ? 'not-allowed' : 'pointer',
+          cursor: isSigning || !hasValidWallet ? 'not-allowed' : 'pointer',
           fontSize: '14px',
-          backgroundColor: 'green',
+          backgroundColor: hasValidWallet ? 'green' : '#ccc',
           color: 'white',
           marginBottom: '20px',
         }}

@@ -10,6 +10,7 @@ export const neuraTestnet = defineChain({
   nativeCurrency: { name: 'ANKR', symbol: 'ANKR', decimals: 18 },
   rpcUrls: {
     default: { http: ['https://testnet.rpc.neuraprotocol.io'] },
+    public: { http: ['https://testnet.rpc.neuraprotocol.io'] },
   },
   blockExplorers: {
     default: {
@@ -22,6 +23,6 @@ export const neuraTestnet = defineChain({
 export const wagmiConfig = createConfig({
   chains: [neuraTestnet],
   transports: {
-    [neuraTestnet.id]: http(),
+    [neuraTestnet.id]: http('https://testnet.rpc.neuraprotocol.io'),
   },
 });
