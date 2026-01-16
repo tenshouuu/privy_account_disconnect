@@ -16,10 +16,6 @@ export function AppPrivyProvider() {
       config={{
         defaultChain: neuraTestnet,
         supportedChains: [neuraTestnet],
-        // Ensure embedded wallets are enabled
-        embeddedWallets: {
-          createOnLogin: 'users-without-wallets',
-        },
       }}
     >
       <QueryClientProvider client={queryClient}>
