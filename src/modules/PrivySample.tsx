@@ -86,7 +86,7 @@ export function PrivySample() {
       <br/>
 
       <p>
-        <b>useWallets wallets:</b> {wallets.length > 0 ? wallets.map((wallet) => wallet.address) : 'No wallets found'}
+        <b>useWallets wallets:</b> {wallets.length > 0 ? wallets.map((wallet) => <div>{wallet.address}</div>) : 'No wallets found'}
       </p>
       <br/>
 
