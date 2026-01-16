@@ -1,4 +1,4 @@
-import { DEFAULT_CHAIN_ID, NEURA_PROVIDER_APP_ID } from '@/modules/const';
+import { DEFAULT_CHAIN_ID } from '@/modules/const';
 import {
   useLogin,
   useLogout,
