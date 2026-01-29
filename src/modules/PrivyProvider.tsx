@@ -19,7 +19,7 @@ export function AppPrivyProvider() {
       }}
     >
       <QueryClientProvider client={queryClient}>
-        <WagmiProvider config={wagmiConfig} reconnectOnMount={true}>
+        <WagmiProvider config={wagmiConfig}>
           <PrivySample />
         </WagmiProvider>
       </QueryClientProvider>
